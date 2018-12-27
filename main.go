@@ -30,11 +30,13 @@ func main() {
 			// Read message from browser
 			msgType, msg, err := conn.ReadMessage()
 			if err != nil {
-				log.Printf("ReadMessage Error: %s", err)
+				//log.Printf("ReadMessage Error: %s", err)
 			}
-			log.Printf("%s sent: %s\n", conn.RemoteAddr(), string(msg))
+			if len(string(msg)) > 0 {
+				log.Printf("%s sent: %s\n", conn.RemoteAddr(), string(msg))
+			}
 			if err = conn.WriteMessage(msgType, msg); err != nil {
-				log.Printf("WriteMessage Error: %s", err)
+				//log.Printf("WriteMessage Error: %s", err)
 			}
 		}
 	})
