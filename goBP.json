@@ -1,0 +1,7 @@
+{
+	"wsHost" : "localhost",
+	"dbHost" : "geekprojex.com",
+	"dbName" : "goBP",
+	"dbUser" : "goBPUser",
+	"dbPass" : "goBPk0de"
+}
