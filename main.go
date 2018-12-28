@@ -83,7 +83,7 @@ func HomeHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	)
 	data.Ip = r.RemoteAddr
-	tmpl, err := template.ParseFiles("templates\\Home.html")
+	tmpl, err := template.ParseFiles("templates\\Home.html", "templates\\Base.html")
 	if err != nil {
 		log.Printf("Template Parse Error: %s\n", err)
 		writeLog("Template Parse Error: "+err.Error(), false)

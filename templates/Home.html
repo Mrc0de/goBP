@@ -1,13 +1,33 @@
-<html>
-    <head>
-    </head>
-    <body>
+{{define "style"}}
+    <style>
+        .mostOfScreen {
+            min-height:80vh;
+        }
+    </style>
+{{end}}
 
-    IP - {{.Ip}}
+{{template "head" .}}
 
-    <input id="input" type="text" />
-    <button onclick="send()">Send</button>
-    <pre id="output"></pre>
+    <div class="content">
+        <div class="col-sm-12">
+            <div class="row">
+                <div class="card col-sm-12 ">
+                    <div class="card-header header-info text-black">
+                        {{.Ip}}
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <textarea class="col-sm-12 mostOfScreen bg-dark text-white" id="output" disabled></textarea>
+                        </div>
+                        <div class="row">
+                            <input id="input" class="form-control bg-dark text-white" type="text" /></br>
+                            <button onclick="send()">Send</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
     <script>
         var input = document.getElementById("input");
         var output = document.getElementById("output");
@@ -27,7 +47,3 @@
         }
     </script>
 
-
-
-    </body>
-</html>
