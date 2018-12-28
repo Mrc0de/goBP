@@ -34,6 +34,7 @@ func main() {
 			}
 			if len(string(msg)) > 0 {
 				log.Printf("%s sent: %s\n", conn.RemoteAddr(), string(msg))
+				writeLog(conn.RemoteAddr().String()+" sent: "+string(msg)+"\n", false)
 			}
 			if err = conn.WriteMessage(msgType, msg); err != nil {
 				//log.Printf("WriteMessage Error: %s", err)
@@ -85,9 +86,26 @@ func HomeHandler(w http.ResponseWriter, r *http.Request) {
 	tmpl, err := template.ParseFiles("templates\\Home.html")
 	if err != nil {
 		log.Printf("Template Parse Error: %s\n", err)
+		writeLog("Template Parse Error: "+err.Error(), false)
 	}
 	err = tmpl.Execute(w, data)
 	if err != nil {
 		log.Printf("Template Exec Error: %s\n", err)
+		writeLog("Template Exec Error: "+err.Error(), false)
+	}
+}
+
+func writeLog(msg string, printStdout bool) {
+	msg = msg + "\n"
+	f, err := os.OpenFile("./goBP.log", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
+	if err != nil {
+		fmt.Printf("Error writing to goBP.log: %s\n", err)
+	}
+	defer f.Close()
+	if _, err = f.WriteString("[LOG] - " + msg); err != nil {
+		fmt.Printf("Error writing to goBP.log: %s\n", err)
+	}
+	if printStdout {
+		fmt.Printf("%s", msg)
 	}
 }
