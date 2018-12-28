@@ -24,10 +24,10 @@ func main() {
 	r.HandleFunc("/live", func(w http.ResponseWriter, r *http.Request) {
 		conn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
-			log.Printf("Upgrade Error: %s", err)
+			log.Printf("Websocket Upgrade Error: %s", err)
 		}
+		writeLog("["+conn.RemoteAddr().String()+"] - "+r.Method+"  "+r.RequestURI, true)
 		for {
-			// Read message from browser
 			msgType, msg, err := conn.ReadMessage()
 			if err != nil {
 				//log.Printf("ReadMessage Error: %s", err)
@@ -93,6 +93,7 @@ func HomeHandler(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Template Exec Error: %s\n", err)
 		writeLog("Template Exec Error: "+err.Error(), false)
 	}
+	writeLog("["+data.Ip+"] - "+r.Method+"  "+r.RequestURI, true)
 }
 
 func writeLog(msg string, printStdout bool) {

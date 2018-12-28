@@ -42,7 +42,11 @@
         };
 
         socket.onerror = function (ev) {
-            $('#output').append("Connection Error");
+            $('#output').append("Connection Error...\n");
+        }
+
+        socket.onclose = function () {
+            $('#output').append("Connection Lost.\n");
         }
 
         function send() {
