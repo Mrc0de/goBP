@@ -30,7 +30,9 @@ func main() {
 		for {
 			msgType, msg, err := conn.ReadMessage()
 			if err != nil {
-				//log.Printf("ReadMessage Error: %s", err)
+				log.Printf("ReadMessage Error: %s", err)
+				writeLog(conn.RemoteAddr().String()+" Read Error: "+string(err.Error()), true)
+				break
 			}
 			if len(string(msg)) > 0 {
 				log.Printf("%s sent: %s\n", conn.RemoteAddr(), string(msg))
