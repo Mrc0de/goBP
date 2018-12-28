@@ -41,9 +41,13 @@
             output.innerHTML += "Server: " + e.data + "\n";
         };
 
+        socket.onerror = function (ev) {
+            $('#output').append("ERROR: "  + ev.toString());
+        }
+
         function send() {
             socket.send(input.value);
             input.value = "";
         }
     </script>
-
+{{template "foot"}}

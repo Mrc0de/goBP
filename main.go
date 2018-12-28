@@ -34,7 +34,7 @@ func main() {
 			}
 			if len(string(msg)) > 0 {
 				log.Printf("%s sent: %s\n", conn.RemoteAddr(), string(msg))
-				writeLog(conn.RemoteAddr().String()+" sent: "+string(msg)+"\n", false)
+				writeLog(conn.RemoteAddr().String()+" sent: "+string(msg), false)
 			}
 			if err = conn.WriteMessage(msgType, msg); err != nil {
 				//log.Printf("WriteMessage Error: %s", err)
