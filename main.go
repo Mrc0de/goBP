@@ -67,6 +67,9 @@ func main() {
 	fmt.Println("Started.")
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
+	// Setup CB Websock
+	sockUrl := "ws-feed.pro.coinbase.com"
+	connectWebSocket(sockUrl, "443", "")
 	// Block until  signal.
 	<-c
 	// Create a deadline
