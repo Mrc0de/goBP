@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"github.com/gorilla/mux"
@@ -19,7 +20,18 @@ var upgrader = websocket.Upgrader{
 	WriteBufferSize: 1024,
 }
 
+type Config struct {
+	WsHost string `json:"wsHost"`
+	DbHost string `json:"dbHost"`
+	DbName string `json:"dbName"`
+	DbUser string `json:"dbUser"`
+	DbPass string `json:"dbPass"`
+}
+
+var config Config
+
 func main() {
+	loadConfig()
 	r := mux.NewRouter()
 	r.HandleFunc("/live", func(w http.ResponseWriter, r *http.Request) {
 		conn, err := upgrader.Upgrade(w, r, nil)
@@ -84,9 +96,11 @@ func main() {
 func HomeHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		data struct {
-			Ip string
+			Ip   string
+			Conf Config
 		}
 	)
+	data.Conf.WsHost = config.WsHost
 	data.Ip = r.RemoteAddr
 	tmpl, err := template.ParseFiles("templates\\Home.html", "templates\\Base.html")
 	if err != nil {
@@ -99,6 +113,29 @@ func HomeHandler(w http.ResponseWriter, r *http.Request) {
 		writeLog("Template Exec Error: "+err.Error(), false)
 	}
 	writeLog("["+data.Ip+"] - "+r.Method+"  "+r.RequestURI, true)
+}
+
+func loadConfig() {
+	f, err := os.OpenFile("./goBP.json", os.O_RDONLY, os.ModePerm)
+
+	if err != nil {
+		writeLog("Error Loading Config..."+err.Error(), true)
+		os.Exit(0)
+	}
+	if err != nil {
+		writeLog("Error Reading config.json..."+err.Error(), true)
+		os.Exit(0)
+	}
+
+	writeLog("Loading Config...", true)
+	d := json.NewDecoder(f)
+	err = d.Decode(&config)
+	if err != nil {
+		writeLog("Error Decoding config.json..."+err.Error(), true)
+		os.Exit(0)
+	}
+	writeLog("Websocket Host: "+config.WsHost, true)
+	writeLog("Database Host: "+config.DbHost, true)
 }
 
 func writeLog(msg string, printStdout bool) {
