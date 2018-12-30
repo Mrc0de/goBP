@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"runtime"
 	"time"
 )
 
@@ -36,26 +37,34 @@ func main() {
 	loadConfig()
 	r := mux.NewRouter()
 	r.HandleFunc("/live", func(w http.ResponseWriter, r *http.Request) {
+		upgrader.CheckOrigin = func(r *http.Request) bool { return true }
 		conn, err := upgrader.Upgrade(w, r, nil)
-		conns = append(conns, conn)
 		if err != nil {
 			log.Printf("Websocket Upgrade Error: %s", err)
-		}
-		writeLog("["+conn.RemoteAddr().String()+"] - "+r.Method+"  "+r.RequestURI, true)
-		writeLog("["+conn.RemoteAddr().String()+"] - Connected...", true)
-		broadCastWebSocketChat("["+conn.RemoteAddr().String()+"] - Connected...", conn)
-		for {
-			_, msg, err := conn.ReadMessage()
-			if err != nil {
-				log.Printf("ReadMessage Error: %s", err)
-				writeLog(conn.RemoteAddr().String()+" Read Error: "+string(err.Error()), true)
-				break
+		} else {
+			conns = append(conns, conn)
+			writeLog("[ "+conn.RemoteAddr().String()+" ] - WEBSOCKET - "+r.RequestURI, true)
+			writeLog("[ "+conn.RemoteAddr().String()+" ] - Connected...", true)
+			broadCastWebSocketChat("[ "+conn.RemoteAddr().String()+" ] Connected.", conn)
+			for {
+				_, msg, err := conn.ReadMessage()
+				if err != nil {
+					log.Printf("ReadMessage Error: %s", err)
+					writeLog(conn.RemoteAddr().String()+" Read Error: "+string(err.Error()), true)
+					for i, _ := range conns {
+						if conns[i] == conn {
+							conns = remove(conns, i)
+						}
+					}
+					break
+				}
+				if len(string(msg)) > 0 {
+					log.Printf("%s sent: %s\n", conn.RemoteAddr(), string(msg))
+					writeLog(conn.RemoteAddr().String()+" sent: "+string(msg), false)
+					broadCastWebSocketChat(conn.RemoteAddr().String()+": "+string(msg), conn)
+				}
 			}
-			if len(string(msg)) > 0 {
-				log.Printf("%s sent: %s\n", conn.RemoteAddr(), string(msg))
-				writeLog(conn.RemoteAddr().String()+" sent: "+string(msg), false)
-				broadCastWebSocketChat(conn.RemoteAddr().String()+": "+string(msg), conn)
-			}
+
 		}
 	})
 	r.HandleFunc("/", HomeHandler)
@@ -117,7 +126,13 @@ func HomeHandler(w http.ResponseWriter, r *http.Request) {
 	)
 	data.Conf.WsHost = config.WsHost
 	data.Ip = r.RemoteAddr
-	tmpl, err := template.ParseFiles("templates\\Home.html", "templates\\Base.html")
+	var files []string
+	if runtime.GOOS == "windows" {
+		files = append(files, "templates\\Home.html", "templates\\Base.html")
+	} else {
+		files = append(files, "./templates/Home.html", "./templates/Base.html")
+	}
+	tmpl, err := template.ParseFiles(files[0], files[1])
 	if err != nil {
 		log.Printf("Template Parse Error: %s\n", err)
 		writeLog("Template Parse Error: "+err.Error(), false)

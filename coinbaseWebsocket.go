@@ -52,8 +52,6 @@ func connectWebSocket(host string, port string, path string) {
 					err = conns[i].WriteMessage(websocket.TextMessage, []byte(message))
 					if err != nil {
 						log.Printf(":Broadcast error> %s", err)
-						conns[i].Close()
-						conns = remove(conns, i)
 					}
 				}
 			}
