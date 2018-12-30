@@ -42,8 +42,10 @@ func main() {
 			log.Printf("Websocket Upgrade Error: %s", err)
 		}
 		writeLog("["+conn.RemoteAddr().String()+"] - "+r.Method+"  "+r.RequestURI, true)
+		writeLog("["+conn.RemoteAddr().String()+"] - Connected...", true)
+		broadCastWebSocketChat("["+conn.RemoteAddr().String()+"] - Connected...", conn)
 		for {
-			msgType, msg, err := conn.ReadMessage()
+			_, msg, err := conn.ReadMessage()
 			if err != nil {
 				log.Printf("ReadMessage Error: %s", err)
 				writeLog(conn.RemoteAddr().String()+" Read Error: "+string(err.Error()), true)
@@ -52,9 +54,7 @@ func main() {
 			if len(string(msg)) > 0 {
 				log.Printf("%s sent: %s\n", conn.RemoteAddr(), string(msg))
 				writeLog(conn.RemoteAddr().String()+" sent: "+string(msg), false)
-			}
-			if err = conn.WriteMessage(msgType, msg); err != nil {
-				//log.Printf("WriteMessage Error: %s", err)
+				broadCastWebSocketChat(conn.RemoteAddr().String()+": "+string(msg), conn)
 			}
 		}
 	})
@@ -94,6 +94,18 @@ func main() {
 	srv.Shutdown(ctx)
 	log.Println("dying...")
 	os.Exit(0)
+}
+
+func broadCastWebSocketChat(said string, sayer *websocket.Conn) {
+	if len(conns) > 0 {
+		//log.Printf("Conns Exist! %d",len(conns))
+		for i, _ := range conns {
+			err := conns[i].WriteMessage(websocket.TextMessage, []byte(said))
+			if err != nil {
+				log.Printf(":Broadcast error> %s", err)
+			}
+		}
+	}
 }
 
 func HomeHandler(w http.ResponseWriter, r *http.Request) {

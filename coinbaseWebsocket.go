@@ -17,6 +17,10 @@ type CoinbaseSubscribeRequest struct {
 	Channels   []string `json:"channels"`
 }
 
+func remove(slice []*websocket.Conn, s int) []*websocket.Conn {
+	return append(slice[:s], slice[s+1:]...)
+}
+
 func connectWebSocket(host string, port string, path string) {
 	var addr = flag.String("addr", host+":"+port, "http service address")
 	////////////
@@ -38,10 +42,21 @@ func connectWebSocket(host string, port string, path string) {
 		for {
 			_, message, err := c.ReadMessage()
 			if err != nil {
-				log.Println("<err: ", err)
+				log.Println("<coinbase websocket read error: ", err)
 				return
 			}
 			log.Printf("<: %s", message)
+			if len(conns) > 0 {
+				//log.Printf("Conns Exist! %d",len(conns))
+				for i, _ := range conns {
+					err = conns[i].WriteMessage(websocket.TextMessage, []byte(message))
+					if err != nil {
+						log.Printf(":Broadcast error> %s", err)
+						conns[i].Close()
+						conns = remove(conns, i)
+					}
+				}
+			}
 		}
 	}()
 

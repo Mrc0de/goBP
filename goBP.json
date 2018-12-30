@@ -2,6 +2,6 @@
 	"wsHost" : "localhost",
 	"dbHost" : "geekprojex.com",
 	"dbName" : "goBP",
-	"dbUser" : "",
-	"dbPass" : ""
+	"dbUser" : "goBPdata",
+	"dbPass" : "datak0de"
 }

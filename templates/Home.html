@@ -29,16 +29,46 @@
         </div>
     </div>
     <script>
+        scrollBottom = function(el) {
+            return el.scrollTop = el.scrollHeight;
+        };
         var input = document.getElementById("input");
         var output = document.getElementById("output");
         var socket = new WebSocket("ws://{{.Conf.WsHost}}/live");
+
+        function tryParseJSON (jsonString){
+            try {
+                var o = JSON.parse(jsonString);
+                if (o && typeof o === "object") {
+                    return o;
+                }
+            }
+            catch (e) { }
+            return false;
+        };
 
         socket.onopen = function () {
             output.innerHTML += "Status: Connected\n";
         };
 
         socket.onmessage = function (e) {
-            output.innerHTML += "Server: " + e.data + "\n";
+            let jObj = tryParseJSON(e.data);
+            if ( jObj ) {
+                switch(jObj.type) {
+                    case 'heartbeat': {
+                        break;
+                    }
+                    case 'ticker' : {
+                        break;
+                    }
+                    case 'chatRaw':{
+                        break;
+                    }
+                }
+            } else {
+                output.innerHTML += e.data + "\n";
+            }
+            scrollBottom(output);
         };
 
         socket.onerror = function (ev) {
