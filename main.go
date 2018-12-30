@@ -29,12 +29,15 @@ type Config struct {
 }
 
 var config Config
+var c *websocket.Conn
+var conns []*websocket.Conn
 
 func main() {
 	loadConfig()
 	r := mux.NewRouter()
 	r.HandleFunc("/live", func(w http.ResponseWriter, r *http.Request) {
 		conn, err := upgrader.Upgrade(w, r, nil)
+		conns = append(conns, conn)
 		if err != nil {
 			log.Printf("Websocket Upgrade Error: %s", err)
 		}
