@@ -13,6 +13,7 @@ import (
 	"os"
 	"os/signal"
 	"runtime"
+	"strings"
 	"time"
 )
 
@@ -43,14 +44,15 @@ func main() {
 			log.Printf("Websocket Upgrade Error: %s", err)
 		} else {
 			conns = append(conns, conn)
-			writeLog("[ "+conn.RemoteAddr().String()+" ] - WEBSOCKET - "+r.RequestURI, true)
-			writeLog("[ "+conn.RemoteAddr().String()+" ] - Connected...", true)
-			broadCastWebSocketChat("[ "+conn.RemoteAddr().String()+" ] Connected.", conn)
+			connIp := conn.RemoteAddr().String()[0:strings.Index(conn.RemoteAddr().String(), ":")]
+			writeLog("[ "+connIp+" ] - WEBSOCKET - "+r.RequestURI, true)
+			writeLog("[ "+connIp+" ] - Connected...", true)
+			broadCastWebSocketChat("[ "+connIp+" ] Connected.", conn)
 			for {
 				_, msg, err := conn.ReadMessage()
 				if err != nil {
 					log.Printf("ReadMessage Error: %s", err)
-					writeLog(conn.RemoteAddr().String()+" Read Error: "+string(err.Error()), true)
+					writeLog(connIp+" Read Error: "+string(err.Error()), true)
 					for i, _ := range conns {
 						if conns[i] == conn {
 							conns = remove(conns, i)
@@ -60,8 +62,8 @@ func main() {
 				}
 				if len(string(msg)) > 0 {
 					log.Printf("%s sent: %s\n", conn.RemoteAddr(), string(msg))
-					writeLog(conn.RemoteAddr().String()+" sent: "+string(msg), false)
-					broadCastWebSocketChat(conn.RemoteAddr().String()+": "+string(msg), conn)
+					writeLog(connIp+" sent: "+string(msg), false)
+					broadCastWebSocketChat(connIp+": "+string(msg), conn)
 				}
 			}
 
@@ -125,7 +127,7 @@ func HomeHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	)
 	data.Conf.WsHost = config.WsHost
-	data.Ip = r.RemoteAddr
+	data.Ip = r.RemoteAddr[0:strings.Index(r.RemoteAddr, ":")]
 	var files []string
 	if runtime.GOOS == "windows" {
 		files = append(files, "templates\\Home.html", "templates\\Base.html")

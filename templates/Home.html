@@ -6,6 +6,9 @@
         .fillParent {
             min-width:100%;
         }
+        .allOfScreen {
+            min-height:100vh;
+        }
     </style>
 {{end}}
 
@@ -14,19 +17,21 @@
     <div class="content">
         <div class="col-sm-12">
             <div class="row">
-                <div class="card col-sm-12 ">
-                    <div class="card-header header-dark text-white" id="cardTitleBar">
+                <div class="card col-sm-12 p-0 allOfScreen">
+                    <div id="cardTitleBar">
                     </div>
-                    <div class="card-body">
+                    <div class="card-body bg-dark">
                         <div class="row">
-                            <textarea class="col-sm-12 mostOfScreen bg-dark text-white" id="output" disabled></textarea>
-                        </div>
-                        <div class="row p-0">
-                            <div class="col-sm-10 p-0">
-                                <input id="input" class="form-control bg-dark text-white fillParent" type="text" />
+                            <div class="col-sm-12">
+                                <textarea class="mostOfScreen bg-dark text-white fillParent" id="output" disabled></textarea>
                             </div>
-                            <div class="col-sm-2 p-0">
-                                <button onclick="send()" class="fillParent form-control bg-dark text-white">Send</button>
+                        </div>
+                        <div class="row mt-2">
+                            <div class="col-sm-10">
+                                <input id="input" class="form-control bg-dark text-white fillParent" type="text"/>
+                            </div>
+                            <div class="col-sm-2">
+                                <button onclick="send()" id="sendButton" class="fillParent form-control bg-dark text-white p-0">Send</button>
                             </div>
                         </div>
                     </div>
@@ -37,9 +42,9 @@
 
 
     <script type="text/x-template" id="cardTitleBarTemplate">
-        <div class="card-header header-primary bg-dark text-white" id="cardTitleBar">
+        <div class="card-header bg-dark text-white" id="cardTitleBar">
             <div class="row">
-                <div class="col-sm-3">
+                <div class="col-sm-2 ml-2">
                     [[barContents]]
                 </div>
                 <div class="col-sm-1 bg-dark text-white">
@@ -135,8 +140,14 @@
         }
 
         function send() {
+            let pat = /[^a-zA-Z0-9\s\,\.\+\!\@\#\$\%\^\&\*\(\)\_\-\=\:\;\<\>\~]+/g;
+            input.value = input.value.replace(pat,'_');
             socket.send(input.value);
             input.value = "";
+            $('#sendButton')[0].className = "fillParent form-control bg-success text-black p-0";
+            setTimeout(function() {
+                $('#sendButton')[0].className = "fillParent form-control bg-dark text-white p-0";
+            },100);
         }
 
         $("#input").keyup(function(e){
