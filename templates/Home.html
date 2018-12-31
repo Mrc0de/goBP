@@ -52,8 +52,8 @@
                     <i class="fas fa-heartbeat" v-if="lastHeartBeat" style="color:red;"></i>
                     <i class="fas fa-heartbeat" v-if="!lastHeartBeat" style="color:grey;"></i>
                 </div>
-                <div class="col-sm-2 bg-dark text-white">
-                    [[lastTickerType]] - [[lastTickerValue]]
+                <div class="col-sm-8 bg-dark text-white">
+                    [[tickerBar]]
                 </div>
             </div>
         </div>
@@ -74,14 +74,24 @@
             data : {
                 clientIP : {{.Ip}},
                 barContents : "You are [ " + {{.Ip}} + " ] ",
-                lastTickerType: "",
-                lastTickerValue: "",
+                tickerBar: "",
+                lastBTCBid: "",
+                lastBTCAsk: "",
+                lastLTCBid: "",
+                lastLTCAsk: "",
+                lastETHBid: "",
+                lastETHAsk: "",
                 lastHeartBeat: false
             },
             delimiters:['[[',']]'],
             methods: {
                 lastBeat(){
                     this.lastHeartBeat = !this.lastHeartBeat;
+                },
+                updateTickerBar() {
+                    this.tickerBar = "BTC-USD - Ask $" + this.lastBTCAsk + " Bid $" + this.lastBTCBid + " | ";
+                    this.tickerBar += "LTC-USD - Ask $" + this.lastLTCAsk + " Bid $" + this.lastLTCBid + " | ";
+                    this.tickerBar += "ETH-USD - Ask $" + this.lastETHAsk + " Bid $" + this.lastETHBid;
                 }
             }
         });
@@ -114,8 +124,26 @@
                             break;
                         }
                         case 'ticker' : {
-                            cardTitleBarV.lastTickerType = jObj.product_id;
-                            cardTitleBarV.lastTickerValue = "Ask $" + jObj.best_ask + " Bid $" + jObj.best_bid;
+                            switch( jObj.product_id ) {
+                                case 'BTC-USD': {
+                                    cardTitleBarV.lastBTCBid = jObj.best_bid;
+                                    cardTitleBarV.lastBTCAsk = jObj.best_ask;
+                                    cardTitleBarV.updateTickerBar();
+                                    break;
+                                }
+                                case 'LTC-USD': {
+                                    cardTitleBarV.lastLTCBid = jObj.best_bid;
+                                    cardTitleBarV.lastLTCAsk = jObj.best_ask;
+                                    cardTitleBarV.updateTickerBar();
+                                    break;
+                                }
+                                case 'ETH-USD': {
+                                    cardTitleBarV.lastETHBid = jObj.best_bid;
+                                    cardTitleBarV.lastETHAsk = jObj.best_ask;
+                                    cardTitleBarV.updateTickerBar();
+                                    break;
+                                }
+                            }
                             break;
                         }
                         case 'chatRaw':{

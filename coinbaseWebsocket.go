@@ -66,7 +66,9 @@ func connectWebSocket(host string, port string, path string) {
 	sub.Type = "subscribe"
 	sub.Channels = append(sub.Channels, "ticker")
 	sub.Channels = append(sub.Channels, "heartbeat")
+	sub.ProductIDs = append(sub.ProductIDs, "BTC-USD")
 	sub.ProductIDs = append(sub.ProductIDs, "LTC-USD")
+	sub.ProductIDs = append(sub.ProductIDs, "ETH-USD")
 	t, _ := json.Marshal(sub)
 	err = c.WriteMessage(websocket.TextMessage, []byte(t))
 	log.Printf(":Sent> - %s", t)
