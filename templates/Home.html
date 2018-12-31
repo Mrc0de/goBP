@@ -116,7 +116,7 @@
 
             socket.onmessage = function (e) {
                 let jObj = tryParseJSON(e.data);
-                console.log(e.data);
+                //console.log(e.data);
                 if ( jObj ) {
                     switch(jObj.type) {
                         case 'heartbeat': {
