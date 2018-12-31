@@ -3,6 +3,9 @@
         .mostOfScreen {
             min-height:80vh;
         }
+        .fillParent {
+            min-width:100%;
+        }
     </style>
 {{end}}
 
@@ -12,22 +15,45 @@
         <div class="col-sm-12">
             <div class="row">
                 <div class="card col-sm-12 ">
-                    <div class="card-header header-info text-black">
-                        {{.Ip}}
+                    <div class="card-header header-dark text-white" id="cardTitleBar">
                     </div>
                     <div class="card-body">
                         <div class="row">
                             <textarea class="col-sm-12 mostOfScreen bg-dark text-white" id="output" disabled></textarea>
                         </div>
-                        <div class="row">
-                            <input id="input" class="form-control bg-dark text-white" type="text" /></br>
-                            <button onclick="send()">Send</button>
+                        <div class="row p-0">
+                            <div class="col-sm-10 p-0">
+                                <input id="input" class="form-control bg-dark text-white fillParent" type="text" />
+                            </div>
+                            <div class="col-sm-2 p-0">
+                                <button onclick="send()" class="fillParent form-control bg-dark text-white">Send</button>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
+
+    <script type="text/x-template" id="cardTitleBarTemplate">
+        <div class="card-header header-primary bg-dark text-white" id="cardTitleBar">
+            <div class="row">
+                <div class="col-sm-3">
+                    [[barContents]]
+                </div>
+                <div class="col-sm-1 bg-dark text-white">
+                    Coinbase
+                    <i class="fas fa-heartbeat" v-if="lastHeartBeat" style="color:red;"></i>
+                    <i class="fas fa-heartbeat" v-if="!lastHeartBeat" style="color:grey;"></i>
+                </div>
+                <div class="col-sm-2 bg-dark text-white">
+                    [[lastTickerType]] - [[lastTickerValue]]
+                </div>
+            </div>
+        </div>
+    </script>
+
     <script>
         scrollBottom = function(el) {
             return el.scrollTop = el.scrollHeight;
@@ -35,7 +61,27 @@
         var input = document.getElementById("input");
         var output = document.getElementById("output");
         var socket = new WebSocket("ws://{{.Conf.WsHost}}/live");
+        socketSetup();
 
+        let cardTitleBarV = new Vue({
+            el: "#cardTitleBar",
+            template: "#cardTitleBarTemplate",
+            data : {
+                clientIP : {{.Ip}},
+                barContents : "You are [ " + {{.Ip}} + " ] ",
+                lastTickerType: "",
+                lastTickerValue: "",
+                lastHeartBeat: false
+            },
+            delimiters:['[[',']]'],
+            methods: {
+                lastBeat(){
+                    this.lastHeartBeat = !this.lastHeartBeat;
+                }
+            }
+        });
+
+        /////////
         function tryParseJSON (jsonString){
             try {
                 var o = JSON.parse(jsonString);
@@ -47,41 +93,60 @@
             return false;
         };
 
-        socket.onopen = function () {
-            output.innerHTML += "Status: Connected\n";
-        };
+        /////////
+        function socketSetup() {
+            socket.onopen = function () {
+                output.innerHTML += "Status: Connected\n";
+            };
 
-        socket.onmessage = function (e) {
-            let jObj = tryParseJSON(e.data);
-            if ( jObj ) {
-                switch(jObj.type) {
-                    case 'heartbeat': {
-                        break;
+            socket.onmessage = function (e) {
+                let jObj = tryParseJSON(e.data);
+                console.log(e.data);
+                if ( jObj ) {
+                    switch(jObj.type) {
+                        case 'heartbeat': {
+                            cardTitleBarV.lastBeat();
+                            break;
+                        }
+                        case 'ticker' : {
+                            cardTitleBarV.lastTickerType = jObj.product_id;
+                            cardTitleBarV.lastTickerValue = "Ask $" + jObj.best_ask + " Bid $" + jObj.best_bid;
+                            break;
+                        }
+                        case 'chatRaw':{
+                            break;
+                        }
                     }
-                    case 'ticker' : {
-                        break;
-                    }
-                    case 'chatRaw':{
-                        break;
-                    }
+                } else {
+                    output.innerHTML += e.data + "\n";
                 }
-            } else {
-                output.innerHTML += e.data + "\n";
+                scrollBottom(output);
+            };
+
+            socket.onerror = function (ev) {
+                $('#output').append("Connection Error...\n");
+                setTimeout(function() { socket = new WebSocket("ws://{{.Conf.WsHost}}/live"); socketSetup();},5000);
             }
-            scrollBottom(output);
-        };
 
-        socket.onerror = function (ev) {
-            $('#output').append("Connection Error...\n");
-        }
-
-        socket.onclose = function () {
-            $('#output').append("Connection Lost.\n");
+            socket.onclose = function () {
+                $('#output').append("Connection Lost.\n");
+                setTimeout(function() { socket = new WebSocket("ws://{{.Conf.WsHost}}/live"); socketSetup(); },3000);
+            }
         }
 
         function send() {
             socket.send(input.value);
             input.value = "";
         }
+
+        $("#input").keyup(function(e){
+            var code = e.which; // recommended to use e.which, it's normalized across browsers
+            if(code==13){
+                e.preventDefault();
+                send();
+            }
+        });
+
+
     </script>
 {{template "foot"}}
