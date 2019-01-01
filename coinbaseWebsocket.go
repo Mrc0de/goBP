@@ -43,6 +43,7 @@ func connectWebSocket(host string, port string, path string) {
 			_, message, err := c.ReadMessage()
 			if err != nil {
 				log.Println("<coinbase websocket read error: ", err)
+				connectWebSocket(host, port, "")
 				return
 			}
 			log.Printf("<: %s", message)
