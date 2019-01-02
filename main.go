@@ -5,7 +5,8 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/gorilla/mux"
+	gmux "github.com/gorilla/mux"
+	"github.com/gorilla/sessions"
 	"github.com/gorilla/websocket"
 	"html/template"
 	"log"
@@ -13,9 +14,12 @@ import (
 	"os"
 	"os/signal"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 )
+
+var store = sessions.NewCookieStore([]byte("7MpuK2u6w7tVQvMX7srsa7md"), []byte("7MpuK2u6w7tVQvMX7srsa7mz"))
 
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
@@ -36,7 +40,12 @@ var conns []*websocket.Conn
 
 func main() {
 	loadConfig()
-	r := mux.NewRouter()
+	// redirect to 443
+	go http.ListenAndServe(":80", http.HandlerFunc(redirect))
+	rmux := http.NewServeMux()
+	rmux.HandleFunc("/", index)
+
+	r := gmux.NewRouter()
 	r.HandleFunc("/live", func(w http.ResponseWriter, r *http.Request) {
 		upgrader.CheckOrigin = func(r *http.Request) bool { return true }
 		conn, err := upgrader.Upgrade(w, r, nil)
@@ -77,7 +86,7 @@ func main() {
 	flag.Parse()
 
 	srv := &http.Server{
-		Addr:         "0.0.0.0:80",
+		Addr:         "0.0.0.0:443",
 		WriteTimeout: time.Second * 15,
 		ReadTimeout:  time.Second * 15,
 		IdleTimeout:  time.Second * 60,
@@ -86,7 +95,7 @@ func main() {
 
 	// Run our server in a goroutine so that it doesn't block.
 	go func() {
-		if err := srv.ListenAndServe(); err != nil {
+		if err := srv.ListenAndServeTLS("/etc/letsencrypt/live/geekprojex.com/cert.pem", "/etc/letsencrypt/live/geekprojex.com/privkey.pem"); err != nil {
 			log.Println(err)
 		}
 	}()
@@ -107,6 +116,25 @@ func main() {
 	os.Exit(0)
 }
 
+func redirect(w http.ResponseWriter, req *http.Request) {
+	target := "https://" + req.Host + req.URL.Path
+	if len(req.URL.RawQuery) > 0 {
+		target += "?" + req.URL.RawQuery
+	}
+	log.Printf("redirect to: %s", target)
+	http.Redirect(w, req, target, http.StatusTemporaryRedirect)
+}
+
+func index(w http.ResponseWriter, req *http.Request) {
+	// all calls to unknown url paths should return 404
+	if req.URL.Path != "/" && req.URL.Path != "/live" {
+		log.Printf("404: %s", req.URL.String())
+		http.NotFound(w, req)
+		return
+	}
+	w.Write([]byte("404 - Use https\n"))
+}
+
 func broadCastWebSocketChat(said string, sayer *websocket.Conn) {
 	if len(conns) > 0 {
 		//log.Printf("Conns Exist! %d",len(conns))
@@ -122,12 +150,44 @@ func broadCastWebSocketChat(said string, sayer *websocket.Conn) {
 func HomeHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		data struct {
-			Ip   string
-			Conf Config
+			Ip       string
+			Conf     Config
+			loggedIn bool
 		}
 	)
 	data.Conf.WsHost = config.WsHost
 	data.Ip = r.RemoteAddr[0:strings.Index(r.RemoteAddr, ":")]
+	session, err := store.Get(r, "goBPSession")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	session.Options = &sessions.Options{
+		Path:     "/",
+		MaxAge:   43200,
+		HttpOnly: false,
+		Secure:   true,
+	}
+	if session.IsNew {
+		log.Printf("New Session Created For %s", r.RemoteAddr)
+	} else {
+		log.Printf("Existing Session Used For %s", r.RemoteAddr)
+	}
+
+	loggedIn := session.Values["loggedIn"]
+	if loggedIn != nil {
+		log.Printf("User is LoggedIn? -> %s", strconv.FormatBool(loggedIn.(bool)))
+		data.loggedIn = loggedIn.(bool)
+	} else {
+		log.Printf("User is NOT Logged In!")
+		session.Values["loggedIn"] = false
+		data.loggedIn = false
+	}
+	sessErr := session.Save(r, w)
+	if sessErr != nil {
+		log.Printf("Session Save Error: %s", sessErr)
+	}
+
 	var files []string
 	if runtime.GOOS == "windows" {
 		files = append(files, "templates\\Home.html", "templates\\Base.html")

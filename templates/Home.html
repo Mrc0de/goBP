@@ -65,7 +65,7 @@
         };
         var input = document.getElementById("input");
         var output = document.getElementById("output");
-        var socket = new WebSocket("ws://{{.Conf.WsHost}}/live");
+        var socket = new WebSocket("wss://{{.Conf.WsHost}}/live");
         socketSetup();
 
         let cardTitleBarV = new Vue({

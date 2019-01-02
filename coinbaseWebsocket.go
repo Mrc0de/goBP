@@ -46,7 +46,7 @@ func connectWebSocket(host string, port string, path string) {
 				connectWebSocket(host, port, "")
 				return
 			}
-			log.Printf("<: %s", message)
+			//log.Printf("<: %s", message)
 			if len(conns) > 0 {
 				//log.Printf("Conns Exist! %d",len(conns))
 				for i, _ := range conns {
