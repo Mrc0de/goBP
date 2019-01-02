@@ -54,6 +54,10 @@ func main() {
 		} else {
 			conns = append(conns, conn)
 			connIp := conn.RemoteAddr().String()[0:strings.Index(conn.RemoteAddr().String(), ":")]
+			if ( len(connIp) < 8 ) {
+				//This is an ipv6, parse it differently
+				connIp = connIp + "_IPv6"
+			}
 			writeLog("[ "+connIp+" ] - WEBSOCKET - "+r.RequestURI, true)
 			writeLog("[ "+connIp+" ] - Connected...", true)
 			broadCastWebSocketChat("[ "+connIp+" ] Connected.", conn)
@@ -157,6 +161,10 @@ func HomeHandler(w http.ResponseWriter, r *http.Request) {
 	)
 	data.Conf.WsHost = config.WsHost
 	data.Ip = r.RemoteAddr[0:strings.Index(r.RemoteAddr, ":")]
+	if ( len(data.Ip) < 8 ) {
+		//It's IPV6 address, fixup
+		data.Ip = data.Ip + "_IPv6"
+	}
 	session, err := store.Get(r, "goBPSession")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -204,7 +212,7 @@ func HomeHandler(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Template Exec Error: %s\n", err)
 		writeLog("Template Exec Error: "+err.Error(), false)
 	}
-	writeLog("["+data.Ip+"] - "+r.Method+"  "+r.RequestURI, true)
+	writeLog("[ "+data.Ip+" ] - "+r.Method+"  "+r.RequestURI, true)
 }
 
 func loadConfig() {
