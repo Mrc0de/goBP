@@ -54,7 +54,7 @@ func main() {
 		} else {
 			conns = append(conns, conn)
 			connIp := conn.RemoteAddr().String()[0:strings.Index(conn.RemoteAddr().String(), ":")]
-			if ( len(connIp) < 8 ) {
+			if len(connIp) < 8 {
 				//This is an ipv6, parse it differently
 				connIp = connIp + "_IPv6"
 			}
@@ -121,10 +121,7 @@ func main() {
 }
 
 func redirect(w http.ResponseWriter, req *http.Request) {
-	target := "https://" + req.Host + req.URL.Path
-	if len(req.URL.RawQuery) > 0 {
-		target += "?" + req.URL.RawQuery
-	}
+	target := "https://geekprojex.com"
 	log.Printf("redirect to: %s", target)
 	http.Redirect(w, req, target, http.StatusTemporaryRedirect)
 }
@@ -161,7 +158,7 @@ func HomeHandler(w http.ResponseWriter, r *http.Request) {
 	)
 	data.Conf.WsHost = config.WsHost
 	data.Ip = r.RemoteAddr[0:strings.Index(r.RemoteAddr, ":")]
-	if ( len(data.Ip) < 8 ) {
+	if len(data.Ip) < 8 {
 		//It's IPV6 address, fixup
 		data.Ip = data.Ip + "_IPv6"
 	}
