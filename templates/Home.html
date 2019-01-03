@@ -52,18 +52,23 @@
                     <i class="fas fa-heartbeat" v-if="lastHeartBeat" style="color:red;"></i>
                     <i class="fas fa-heartbeat" v-if="!lastHeartBeat" style="color:grey;"></i>
                 </div>
-                <div class="col-sm-9 bg-dark text-white">
-                    <div class="col-sm-4">
-                        <font v-if="!dirBTC" color="white">[[tickerBTC]]</font>
-                        <font v-if="dirBTC" color="green">[[tickerBTC]] ^</font>
-                    </div>
-                    <div class="col-sm-4">
-                        <font v-if="!dirLTC" color="white">[[tickerLTC]]</font>
-                        <font v-if="dirLTC" color="green">[[tickerLTC]] ^</font>
-                    </div>
-                    <div class="col-sm-4">
-                        <font v-if="!dirETH" color="white">[[tickerETH]]</font>
-                        <font v-if="dirETH" color="green">[[tickerETH]] ^</font>
+                <div class="col-sm-8 bg-dark text-white">
+                    <div class="row">
+                        <div class="col-sm-4">
+                            <font v-if="dirBTC > 0" color="red">[[tickerBTC]] <i class="fas fa-arrow-down"></i></font>
+                            <font v-if="!dirBTC" color="white">[[tickerBTC]] </font>
+                            <font v-if="dirBTC < 0" color="#adff2f">[[tickerBTC]] <i class="fas fa-arrow-up"></i></font>
+                        </div>
+                        <div class="col-sm-4">
+                            <font v-if="dirLTC > 0" color="red">[[tickerLTC]] <i class="fas fa-arrow-down"></i></font>
+                            <font v-if="!dirLTC" color="white">[[tickerLTC]] </font>
+                            <font v-if="dirLTC < 0" color="#adff2f">[[tickerLTC]] <i class="fas fa-arrow-up"></i></font>
+                        </div>
+                        <div class="col-sm-4">
+                            <font v-if="dirETH > 0" color="red">[[tickerETH]] <i class="fas fa-arrow-down"></i></font>
+                            <font v-if="!dirETH" color="white">[[tickerETH]] </font>
+                            <font v-if="dirETH < 0" color="#adff2f">[[tickerETH]] <i class="fas fa-arrow-up"></i></font>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -107,9 +112,9 @@
                     this.lastHeartBeat = !this.lastHeartBeat;
                 },
                 updateTickerBar() {
-                    this.dirBTC = (this.lastTicker.btcUsd < this.lastBTCAsk) ? 1 : 0;
-                    this.dirLTC = (this.lastTicker.ltcUsd < this.lastLTCAsk) ? 1 : 0;
-                    this.dirETH = (this.lastTicker.ethUsd < this.lastETHAsk) ? 1 : 0;
+                    this.dirBTC = (this.lastTicker.btcUsd - this.lastBTCAsk); //negative value = new is higher
+                    this.dirLTC = (this.lastTicker.ltcUsd - this.lastLTCAsk); //positive value = new is lower
+                    this.dirETH = (this.lastTicker.ethUsd - this.lastETHAsk); //zero = new is same
                     this.tickerBTC = "BTC-USD - Ask $" + this.lastBTCAsk + " Bid $" + this.lastBTCBid;
                     this.tickerLTC = "LTC-USD - Ask $" + this.lastLTCAsk + " Bid $" + this.lastLTCBid;
                     this.tickerETH = "ETH-USD - Ask $" + this.lastETHAsk + " Bid $" + this.lastETHBid;
