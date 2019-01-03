@@ -52,8 +52,19 @@
                     <i class="fas fa-heartbeat" v-if="lastHeartBeat" style="color:red;"></i>
                     <i class="fas fa-heartbeat" v-if="!lastHeartBeat" style="color:grey;"></i>
                 </div>
-                <div class="col-sm-8 bg-dark text-white">
-                    [[tickerBar]]
+                <div class="col-sm-9 bg-dark text-white">
+                    <div class="col-sm-4">
+                        <font v-if="!dirBTC" color="white">[[tickerBTC]]</font>
+                        <font v-if="dirBTC" color="green">[[tickerBTC]] ^</font>
+                    </div>
+                    <div class="col-sm-4">
+                        <font v-if="!dirLTC" color="white">[[tickerLTC]]</font>
+                        <font v-if="dirLTC" color="green">[[tickerLTC]] ^</font>
+                    </div>
+                    <div class="col-sm-4">
+                        <font v-if="!dirETH" color="white">[[tickerETH]]</font>
+                        <font v-if="dirETH" color="green">[[tickerETH]] ^</font>
+                    </div>
                 </div>
             </div>
         </div>
@@ -65,7 +76,7 @@
         };
         var input = document.getElementById("input");
         var output = document.getElementById("output");
-        var socket = new WebSocket("wss://{{.Conf.WsHost}}/live");
+        var socket = new WebSocket("ws://{{.Conf.WsHost}}/live");
         socketSetup();
 
         let cardTitleBarV = new Vue({
@@ -75,13 +86,20 @@
                 clientIP : {{.Ip}},
                 barContents : "You are [ " + {{.Ip}} + " ] ",
                 tickerBar: "",
+                tickerBTC:"",
+                tickerLTC:"",
+                tickerETH:"",
                 lastBTCBid: "",
                 lastBTCAsk: "",
                 lastLTCBid: "",
                 lastLTCAsk: "",
                 lastETHBid: "",
                 lastETHAsk: "",
-                lastHeartBeat: false
+                dirBTC: 0,
+                dirLTC: 0,
+                dirETH: 0,
+                lastHeartBeat: false,
+                lastTicker: {btcUsd:0,ltcUsd:0,ethUsd:0}
             },
             delimiters:['[[',']]'],
             methods: {
@@ -89,9 +107,15 @@
                     this.lastHeartBeat = !this.lastHeartBeat;
                 },
                 updateTickerBar() {
-                    this.tickerBar = "BTC-USD - Ask $" + this.lastBTCAsk + " Bid $" + this.lastBTCBid + " | ";
-                    this.tickerBar += "LTC-USD - Ask $" + this.lastLTCAsk + " Bid $" + this.lastLTCBid + " | ";
-                    this.tickerBar += "ETH-USD - Ask $" + this.lastETHAsk + " Bid $" + this.lastETHBid;
+                    this.dirBTC = (this.lastTicker.btcUsd < this.lastBTCAsk) ? 1 : 0;
+                    this.dirLTC = (this.lastTicker.ltcUsd < this.lastLTCAsk) ? 1 : 0;
+                    this.dirETH = (this.lastTicker.ethUsd < this.lastETHAsk) ? 1 : 0;
+                    this.tickerBTC = "BTC-USD - Ask $" + this.lastBTCAsk + " Bid $" + this.lastBTCBid;
+                    this.tickerLTC = "LTC-USD - Ask $" + this.lastLTCAsk + " Bid $" + this.lastLTCBid;
+                    this.tickerETH = "ETH-USD - Ask $" + this.lastETHAsk + " Bid $" + this.lastETHBid;
+                    this.lastTicker.btcUsd = this.lastBTCAsk;
+                    this.lastTicker.ltcUsd = this.lastLTCAsk;
+                    this.lastTicker.ethUsd = this.lastETHAsk;
                 }
             }
         });
