@@ -182,12 +182,12 @@
 
             socket.onerror = function (ev) {
                 $('#output').append("Connection Error...\n");
-                setTimeout(function() { socket = new WebSocket("ws://{{.Conf.WsHost}}/live"); socketSetup();},5000);
+                setTimeout(function() { socket = new WebSocket("wss://{{.Conf.WsHost}}/live"); socketSetup();},5000);
             }
 
             socket.onclose = function () {
                 $('#output').append("Connection Lost.\n");
-                setTimeout(function() { socket = new WebSocket("ws://{{.Conf.WsHost}}/live"); socketSetup(); },3000);
+                setTimeout(function() { socket = new WebSocket("wss://{{.Conf.WsHost}}/live"); socketSetup(); },3000);
             }
         }
 
